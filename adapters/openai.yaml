@@ -1,0 +1,4 @@
+interface:
+  display_name: "Promptly"
+  short_description: "Turn rough ideas into execution-ready prompts"
+  default_prompt: "Use $promptly to expand this request and carry it out: "

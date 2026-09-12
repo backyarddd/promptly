@@ -1,0 +1,62 @@
+{
+  "date": "2026-09-11 America/Los_Angeles",
+  "initial_core_sha256": "5bf5f925223de5ceda55b1dbc7ee5501f309dc75a673812fcc273d18d001c43c",
+  "revised_core_sha256": "33c138e0b741d90d822689eb376092edd956b802a8b88e7a29c9652f4fbbff43",
+  "tests": [
+    {
+      "host": "claude",
+      "mode": "execute",
+      "exit_code": 0,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "b6301ea8701d12fd205bb7da378e027d0c027639e7c01117b5c681a8ce5b8c6a",
+      "changed": true,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save draft</button>\n"
+    },
+    {
+      "host": "claude",
+      "mode": "preview",
+      "exit_code": 0,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "changed": false,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save</button>\n"
+    },
+    {
+      "host": "codex",
+      "mode": "execute",
+      "exit_code": 0,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "846e5a1e6c846872c7216dec204ff5ce53c27ed9611788c551f29cddd9c446ff",
+      "changed": true,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save draft</button>\n"
+    },
+    {
+      "host": "codex",
+      "mode": "no-run",
+      "exit_code": 0,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "changed": false,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save</button>\n"
+    },
+    {
+      "host": "codex",
+      "mode": "preview",
+      "exit_code": 0,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "changed": false,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save</button>\n"
+    },
+    {
+      "host": "opencode",
+      "mode": "preview",
+      "exit_code": 1,
+      "before_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "after_sha256": "90ba2ab92194628324e42f69e93c0d77d7f10096e1aaa27f26e5a535b8f8ece6",
+      "changed": false,
+      "html": "<!doctype html><button id=\"save\" onclick=\"window.saved=true\">Save</button>\n"
+    }
+  ],
+  "opencode_limit": "Command expanded correctly; configured provider rejected tool-use request with HTTP 404."
+}
