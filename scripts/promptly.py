@@ -49,7 +49,8 @@ def is_link(path: Path) -> bool:
 
 def check_path(path: Path) -> None:
     # Do not silently follow a skill symlink or Windows junction when replacing files.
-    for part in (path, *path.parents):
+    # Check parents first: POSIX lstat(child) raises ENOTDIR if a parent is a file.
+    for part in (*reversed(path.parents), path):
         if is_link(part):
             raise ValueError(f"Refusing linked installation path: {part}")
         if part != path and part.exists() and not part.is_dir():
