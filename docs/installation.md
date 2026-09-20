@@ -1,70 +1,66 @@
 # Installation, updates, and removal
 
-Run installer commands from the cloned Promptly repository. The installer uses Python's standard library, makes no network requests or model calls, and writes only the selected Promptly files. Run `python scripts/promptly.py install --help` for options.
+Run the installer from the Promptly checkout. It uses only Python's standard library, makes no network or model calls, and writes only the selected Promptly files.
+
+```sh
+python scripts/promptly.py install --help
+```
 
 ## Destinations
 
-| Adapter | `--scope project --project PATH` | `--scope user` |
+Codex, Claude, and OpenCode install their native bundles. The `generic` preset and the additional portable Agent Skills presets install `generic/promptly/SKILL.md`; those aliases do not generate duplicate prompt bodies.
+
+| Harness | Project scope | User scope |
 | --- | --- | --- |
 | `codex` | `PATH/.agents/skills/promptly/` | `~/.agents/skills/promptly/` |
 | `claude` | `PATH/.claude/skills/promptly/` | `~/.claude/skills/promptly/` |
 | `opencode` | `PATH/.opencode/commands/promptly.md` | `$XDG_CONFIG_HOME/opencode/commands/promptly.md`, or `~/.config/opencode/commands/promptly.md` |
 | `generic` | `PATH/.agents/skills/promptly/` | `~/.agents/skills/promptly/` |
+| `pi` | `PATH/.pi/skills/promptly/` | `~/.pi/agent/skills/promptly/` |
+| `cursor` | `PATH/.cursor/skills/promptly/` | `~/.cursor/skills/promptly/` |
+| `deepseek-harness` | `PATH/.dsh/skills/promptly/` | `~/.dsh/skills/promptly/` |
+| `grok` (Grok Build) | `PATH/.grok/skills/promptly/` | `~/.grok/skills/promptly/` |
+| `muse` (Muse Code) | `PATH/.agents/skills/promptly/` | `$XDG_CONFIG_HOME/muse/skills/promptly/`, or `~/.config/muse/skills/promptly/` |
+| `gemini` | `PATH/.gemini/skills/promptly/` | `~/.gemini/skills/promptly/` |
+| `copilot` | `PATH/.github/skills/promptly/` | `~/.copilot/skills/promptly/` |
+| `goose` | `PATH/.agents/skills/promptly/` | `~/.agents/skills/promptly/` |
 
-The default scope is **project**, with the current directory as project root. Always specify `--project` when installing into a different repository. Installing at project scope makes the files available to commit with that project's source if desired.
+The DeepSeek Harness preset uses the documented `.dsh` locations. It is developer-preview/opt-in; enable the harness's skill-composition packages as required. The installer does not interpret `DSH_HOME`, so use `--destination` when that variable points to a non-default root.
 
-`--destination` overrides destination calculation. For skills it means the exact `promptly` folder; for OpenCode it means the **commands directory**. For example, in PowerShell:
+The `grok` preset targets Grok Build's local skills support. It does not claim support for consumer Grok Bot. The `muse` preset targets Muse Code's Agent Skills directories. It does not claim support for the consumer Muse application.
 
-```powershell
-python scripts/promptly.py install codex --destination "$env:USERPROFILE/.codex/skills/promptly"
-python scripts/promptly.py install opencode --project 'C:/Projects/My Game'
+The default scope is project and the default project is the current directory. Specify `--project` for another repository. `--destination` means the exact skill folder, except for OpenCode where it means the commands directory.
+
+Examples:
+
+```sh
+python scripts/promptly.py install pi --scope project --project /path/to/project
+python scripts/promptly.py install muse --scope user
+python scripts/promptly.py install opencode --scope user
+python scripts/promptly.py install cursor --destination /path/to/project/.cursor/skills/promptly
 ```
 
-The first example supports an existing Codex installation using its older/configured personal skills location. The installer does not infer this from `CODEX_HOME`; supply your configured path explicitly. The recommended portable Codex default follows current documentation at `~/.agents/skills`.
+Use one definition for a given host/name. Overlapping project and user skills may shadow each other or appear twice. Reload the host if it does not refresh discovery.
 
-## Manual installation without Python
+## Manual installation
 
-Copy the adapter's complete bundle:
+Copy the complete bundle when Python is unavailable:
 
-- `bundles/codex/promptly/` → your Codex skills directory, retaining `agents/openai.yaml`.
-- `bundles/claude/promptly/` → your Claude Code skills directory.
-- `bundles/opencode/promptly.md` → your OpenCode commands directory.
-- `bundles/generic/promptly/` → your other host's supported skills directory.
-
-Each bundle contains the complete core prompt. There are no runtime references to the clone, so the installed files keep working if you move the source checkout. Select only one definition for the same host/name; overlapping personal and project skills can shadow each other or appear twice.
-
-## Verify discovery
-
-In Codex CLI/IDE, use `/skills` or type `$promptly`. In Claude Code, type `/promptly`. In OpenCode, use the TUI command picker or `/promptly`. Restart the host if it started before the top-level skills directory existed or does not refresh discovery.
-
-Try preview first:
-
-```text
-/promptly --show --compact rename the Save button to Save draft; keep its behavior
-```
-
-Use `$promptly` in Codex. You should receive a short execution instruction, with no changed files or test runs. Then try a small real request in a disposable project without `--show` to verify continued execution.
+- `bundles/codex/promptly/` to the Codex skill directory, retaining `agents/openai.yaml`.
+- `bundles/claude/promptly/` to the Claude Code skill directory.
+- `bundles/opencode/promptly.md` to the OpenCode commands directory.
+- `bundles/generic/promptly/` to any portable Agent Skills directory listed above.
 
 ## Updates and conflicts
 
 ```sh
 git pull --ff-only
-python scripts/promptly.py install claude --scope user --dry-run
-python scripts/promptly.py install claude --scope user --force
+python scripts/promptly.py install pi --scope user --dry-run
+python scripts/promptly.py install pi --scope user --force
 ```
 
-Use the same adapter/scope/destination as the initial install. Reinstalling identical content does nothing. Differing existing files are refused unless `--force` is provided; forced replacement saves the previous bytes beside the original with `.promptly-backup`, adding a numeric suffix if necessary. Review conflicts before forcing an update. Backups do not have `.md` extensions and are not additional command entries.
-
-The installer preflights file conflicts and rejects symlink/junction paths. It preserves unrelated files. An I/O failure or interrupted install is not a transaction; inspect the printed paths and rerun after resolving the error. Manual copy is appropriate when your intentional directory layout uses links.
+Identical content is skipped. Differing files are refused unless `--force` is used; forced replacement saves the previous bytes beside the file as `.promptly-backup` (with a numeric suffix if needed). The installer preflights all files and rejects symlink/junction paths before writing. It preserves unrelated files. An interrupted install is not transactional; inspect the printed paths and rerun after resolving the error.
 
 ## Removal
 
-Remove only the Promptly skill folder you installed, or OpenCode's `promptly.md` file. Keep any personal notes/backups you want to retain. No other settings, package registrations, or background processes need removal. If a previous version was replaced, restore the relevant `.promptly-backup` file and reload the host.
-
-## Troubleshooting
-
-- **Codex rejects `/promptly`:** invoke the skill as `$promptly` or through the picker.
-- **Command missing:** verify the destination, filename, YAML frontmatter, and host reload; inspect competing definitions and host skill permissions.
-- **Only planning occurs:** check your selected agent and permission mode. Promptly keeps the host's capabilities and does not force a build agent.
-- **Preview performs work:** stop the run and report a behavioral regression with the invocation, model, host version, and a redacted transcript. Preview modes are model instructions, not a permissions boundary.
-- **Old behavior after changing the core:** rebuild bundles and reinstall. Installed copies intentionally do not track your checkout automatically.
+Remove only the Promptly folder installed for the selected host, or OpenCode's `promptly.md`. Keep any backups or notes you want. No host configuration or background process needs removal.

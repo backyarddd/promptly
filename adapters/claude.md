@@ -6,7 +6,7 @@ argument-hint: "[--show|--no-run] [--compact|--deep] [--research|--debug] reques
 
 <!-- Generated from core/prompt.md; SHA256 {{CORE_SHA256}}. Edit source, then rebuild. -->
 
-Adapter: Claude Code. Use the invocation arguments at the end as the rough request and leading options. If invoked through natural language with no arguments, use the current user-designated request. Keep available conversation/project context. Continue in this agent; do not fork, create a second task, or call Promptly recursively.
+Adapter: Claude Code. Use the invocation arguments at the end as the rough request and leading options. If invoked through natural language with no arguments, use the current user-designated request. Keep available conversation/project context and continue in this agent. Do not invoke Promptly recursively or create an unnecessary separate task; honor explicit user or host delegation requests.
 
 {{CORE}}
 

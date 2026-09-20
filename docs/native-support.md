@@ -1,22 +1,27 @@
-# Native support research
+# Native support
 
-Checked **September 11, 2026** against official documentation. The design below is Promptly's integration decision, not a promise that every host version implements every feature identically.
+The presets below target documented local Agent Skills locations checked on September 19, 2026. “Portable” means Promptly installs the generic `SKILL.md`; discovery, invocation syntax, context, and permissions remain controlled by each host.
 
-| Host | Official mechanism and decision | Limitation |
-| --- | --- | --- |
-| Codex | `SKILL.md` with name/description; project/user discovery under `.agents/skills`. Use a native skill and optional `agents/openai.yaml`. | Explicit CLI/IDE invocation is `$promptly` or `/skills`; no custom bare slash alias is claimed. |
-| Claude Code | Skills under `.claude/skills/promptly` expose `/promptly`; `$ARGUMENTS` receives the invocation text. Keep the skill in the current conversation. | No `context: fork`, forced model, or extra tool grants. Standalone installation preserves the desired command name. |
-| OpenCode | Markdown under `.opencode/commands` or the user commands folder; `$ARGUMENTS` binds the request. Use `subtask: false` to retain current-session behavior. | Selected agent permissions still apply. The legacy and V2 docs differ on JSON configuration and file attachment expansion, so Promptly uses neither. |
-| Generic | Standard `SKILL.md` with name/description and a self-contained body. | Discovery, command syntax, tools, and context availability are host-specific. Text-only environments can only return the expansion. |
+| Host/preset | Integration | Project location | User location | Status and limits |
+| --- | --- | --- | --- | --- |
+| Codex | Native skill plus optional `agents/openai.yaml` | `.agents/skills` | `.agents/skills` | `$promptly` or the skill picker; no fabricated slash alias |
+| Claude Code | Native skill command with `$ARGUMENTS` | `.claude/skills` | `.claude/skills` | `/promptly`; current session and host permissions are retained |
+| OpenCode | Markdown custom command with `$ARGUMENTS` | `.opencode/commands` | XDG config `opencode/commands` | `/promptly`; selected agent/model and permissions are retained |
+| Pi | Portable Agent Skill | `.pi/skills` | `.pi/agent/skills` | Host-specific discovery and invocation |
+| Cursor | Portable Agent Skill | `.cursor/skills` | `.cursor/skills` | Host-specific discovery and invocation |
+| DeepSeek Harness (`dsh`) | Portable Agent Skill | `.dsh/skills` | `.dsh/skills` | Developer-preview/opt-in; enable skill-composition packages; installer does not interpret `DSH_HOME` |
+| Grok Build | Portable Agent Skill | `.grok/skills` | `.grok/skills` | Supported local harness; this is not consumer Grok Bot |
+| Muse Code | Portable Agent Skill | `.agents/skills` | XDG config `muse/skills` | Supported coding harness; this is not consumer Muse |
+| Gemini CLI | Portable Agent Skill | `.gemini/skills` | `.gemini/skills` | Host-specific discovery and invocation |
+| GitHub Copilot | Portable Agent Skill | `.github/skills` | `.copilot/skills` | Host-specific discovery and invocation |
+| Goose | Portable Agent Skill | `.agents/skills` | `.agents/skills` | Host-specific discovery and invocation |
 
-Sources: [OpenAI: Build skills](https://learn.chatgpt.com/docs/build-skills), [Claude Code: Extend Claude with skills](https://code.claude.com/docs/en/skills), [OpenCode commands](https://opencode.ai/docs/commands/), [OpenCode V2 commands](https://opencode.ai/v2/docs/commands), [Agent Skills specification](https://agentskills.io/specification).
+The installer uses exact mappings above. `muse --scope user` resolves `XDG_CONFIG_HOME/muse/skills/promptly`, falling back to `~/.config/muse/skills/promptly`; `deepseek-harness` uses `.dsh` directly. Use `--destination` for an organization-specific root or environment convention.
 
-OpenCode's V2 documentation retains `subtask` as a deprecated alias for `subagent`; using `subtask: false` is the compatible choice for the observed 1.x CLI and V2 documentation. The adapter omits `agent` and `model` to keep the user's current choices. It does not depend on `@file` inclusion or shell preprocessing.
+Grok Build and Muse Code are the documented local coding harnesses covered here. Promptly does not claim support for consumer Grok Bot or consumer Muse because they do not expose the same local `SKILL.md` installation contract.
 
-For Codex, current official guidance prefers `.agents/skills`; the local desktop environment also exposes personal skills from `.codex/skills`. The installer defaults to the documented portable location and permits an exact destination for existing setups.
+## Sources and validation boundary
 
-Observed local CLI versions were Codex **0.153.2**, OpenCode **1.18.25**, and Claude Code **2.1.261**. A version being present is not itself proof of successful native execution. See the [validation record](validation.md) for the tests actually completed.
+The native Codex, Claude Code, and OpenCode bindings follow their official skill/command documentation: [OpenAI Build Skills](https://learn.chatgpt.com/docs/build-skills), [Claude Code skills](https://code.claude.com/docs/en/skills), and [OpenCode commands](https://opencode.ai/docs/commands/). The portable format follows the [Agent Skills specification](https://agentskills.io/specification). The additional presets are packaging support for their documented local skill directories; Promptly does not claim that every host version has been end-to-end smoke-tested.
 
-## Why no interceptors or plugins in v1?
-
-Each primary host can load native instructions into the current session. That already supplies the useful behavior: expand the user's intent and proceed with context intact. A plugin, shell wrapper, model proxy, or forked session would add packaging and context-transfer costs without improving the core expansion. A future distribution plugin can package these same bundles without introducing a second canonical prompt.
+For a new host, first try the generic bundle. Add a native adapter only when the host documents a distinct input or metadata contract. Record observed discovery and execution separately from deterministic installer checks.

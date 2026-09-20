@@ -18,6 +18,48 @@ ENTRYPOINTS = {
     "generic": Path("generic/promptly/SKILL.md"),
 }
 
+# These hosts consume the portable Agent Skills bundle. Keep aliases here rather
+# than generating copies that can drift from generic/promptly/SKILL.md.
+INSTALL_HARNESSES = {
+    **{name: name for name in ENTRYPOINTS},
+    "pi": "generic",
+    "cursor": "generic",
+    "deepseek-harness": "generic",
+    "grok": "generic",
+    "muse": "generic",
+    "gemini": "generic",
+    "copilot": "generic",
+    "goose": "generic",
+}
+
+PROJECT_DESTINATIONS = {
+    "codex": ".agents/skills/promptly",
+    "claude": ".claude/skills/promptly",
+    "opencode": ".opencode/commands",
+    "generic": ".agents/skills/promptly",
+    "pi": ".pi/skills/promptly",
+    "cursor": ".cursor/skills/promptly",
+    "deepseek-harness": ".dsh/skills/promptly",
+    "grok": ".grok/skills/promptly",
+    "muse": ".agents/skills/promptly",
+    "gemini": ".gemini/skills/promptly",
+    "copilot": ".github/skills/promptly",
+    "goose": ".agents/skills/promptly",
+}
+
+USER_DESTINATIONS = {
+    "codex": ".agents/skills/promptly",
+    "claude": ".claude/skills/promptly",
+    "generic": ".agents/skills/promptly",
+    "pi": ".pi/agent/skills/promptly",
+    "cursor": ".cursor/skills/promptly",
+    "deepseek-harness": ".dsh/skills/promptly",
+    "grok": ".grok/skills/promptly",
+    "gemini": ".gemini/skills/promptly",
+    "copilot": ".copilot/skills/promptly",
+    "goose": ".agents/skills/promptly",
+}
+
 
 def render(root: Path = ROOT) -> dict[Path, bytes]:
     core = (root / "core/prompt.md").read_text(encoding="utf-8").strip()
@@ -59,7 +101,8 @@ def check_path(path: Path) -> None:
 
 def build(root: Path = ROOT, check: bool = False) -> list[str]:
     stale = []
-    for relative, content in render(root).items():
+    expected = render(root)
+    for relative, content in expected.items():
         path = root / "bundles" / relative
         check_path(path)
         if path.is_file() and path.read_bytes() == content:
@@ -68,33 +111,39 @@ def build(root: Path = ROOT, check: bool = False) -> list[str]:
         if not check:
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_bytes(content)
+    bundles = root / "bundles"
+    if bundles.exists():
+        expected_paths = {bundles / relative for relative in expected}
+        for path in bundles.rglob("*"):
+            if path.is_file() and path not in expected_paths:
+                stale.append(path.relative_to(bundles).as_posix())
     return stale
 
 
 def destination(harness: str, scope: str, project: Path, home: Path,
                 environ: dict[str, str]) -> Path:
+    if harness not in INSTALL_HARNESSES:
+        raise ValueError(f"Unknown harness: {harness}")
     if scope == "project":
         base = project.absolute()
-        return base / {
-            "codex": ".agents/skills/promptly",
-            "claude": ".claude/skills/promptly",
-            "opencode": ".opencode/commands",
-            "generic": ".agents/skills/promptly",
-        }[harness]
-    if harness in {"codex", "generic"}:
-        return home / ".agents/skills/promptly"
-    if harness == "claude":
-        return home / ".claude/skills/promptly"
-    config = Path(environ.get("XDG_CONFIG_HOME") or home / ".config")
-    if not config.is_absolute():
-        raise ValueError("XDG_CONFIG_HOME must be an absolute path")
-    return config / "opencode/commands"
+        return base / PROJECT_DESTINATIONS[harness]
+    if harness == "opencode":
+        config = Path(environ.get("XDG_CONFIG_HOME") or home / ".config")
+        if not config.is_absolute():
+            raise ValueError("XDG_CONFIG_HOME must be an absolute path")
+        return config / "opencode/commands"
+    if harness == "muse":
+        config = Path(environ.get("XDG_CONFIG_HOME") or home / ".config")
+        if not config.is_absolute():
+            raise ValueError("XDG_CONFIG_HOME must be an absolute path")
+        return config / "muse/skills/promptly"
+    return home / USER_DESTINATIONS[harness]
 
 
 def install(harness: str, dest: Path, *, force: bool = False,
             dry_run: bool = False, root: Path = ROOT) -> list[Path]:
     # Render from canonical sources so installation cannot accidentally use stale bundles.
-    entry = ENTRYPOINTS[harness]
+    entry = ENTRYPOINTS[INSTALL_HARNESSES[harness]]
     source_base = entry.parent
     files = {
         dest / relative.relative_to(source_base): content
@@ -136,7 +185,7 @@ def main(argv: list[str] | None = None) -> int:
     builder = commands.add_parser("build", help="Regenerate native bundles from the core")
     builder.add_argument("--check", action="store_true", help="Fail on drift without writing")
     installer = commands.add_parser("install", help="Install a native adapter (no model calls)")
-    installer.add_argument("harness", choices=ENTRYPOINTS)
+    installer.add_argument("harness", choices=INSTALL_HARNESSES)
     installer.add_argument("--scope", choices=("project", "user"), default="project")
     installer.add_argument("--project", type=Path, default=Path.cwd())
     installer.add_argument("--destination", type=Path,

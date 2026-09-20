@@ -49,6 +49,14 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(stale, ["codex/promptly/SKILL.md"])
         self.assertEqual(entry.read_text(), "user edit")
 
+    def test_build_check_detects_unexpected_generated_files(self):
+        shutil.copytree(ROOT / "core", self.base / "core")
+        shutil.copytree(ROOT / "adapters", self.base / "adapters")
+        promptly.build(self.base)
+        extra = self.base / "bundles/generic/obsolete.md"
+        extra.write_text("stale", encoding="utf-8")
+        self.assertIn("generic/obsolete.md", promptly.build(self.base, check=True))
+
     def test_invalid_adapter_is_rejected(self):
         shutil.copytree(ROOT / "core", self.base / "core")
         shutil.copytree(ROOT / "adapters", self.base / "adapters")
@@ -66,11 +74,20 @@ class PackagingTests(unittest.TestCase):
         self.assertEqual(promptly.install("codex", dest), [])
 
     def test_every_harness_installs_only_expected_files(self):
-        for harness in promptly.ENTRYPOINTS:
+        for harness in promptly.INSTALL_HARNESSES:
             dest = self.base / harness
             paths = promptly.install(harness, dest)
-            self.assertEqual(len(paths), 2 if harness == "codex" else 1)
+            self.assertEqual(len(paths), 2 if promptly.INSTALL_HARNESSES[harness] == "codex" else 1)
             self.assertTrue((dest / ("promptly.md" if harness == "opencode" else "SKILL.md")).exists())
+
+    def test_portable_aliases_match_generic_bundle(self):
+        generic = promptly.render()[promptly.ENTRYPOINTS["generic"]]
+        for harness, source in promptly.INSTALL_HARNESSES.items():
+            if source != "generic":
+                continue
+            dest = self.base / harness
+            promptly.install(harness, dest)
+            self.assertEqual((dest / "SKILL.md").read_bytes(), generic)
 
     def test_dry_run_does_not_create_directories(self):
         dest = self.base / "uncreated" / "skill"
@@ -126,8 +143,7 @@ class PackagingTests(unittest.TestCase):
         self.assertFalse((dest / "SKILL.md").exists())
 
     def test_project_destinations(self):
-        expected = {"codex": ".agents/skills/promptly", "generic": ".agents/skills/promptly",
-                    "claude": ".claude/skills/promptly", "opencode": ".opencode/commands"}
+        expected = promptly.PROJECT_DESTINATIONS
         for harness, relative in expected.items():
             dest = promptly.destination(harness, "project", self.base, self.base, {})
             self.assertEqual(dest, self.base / relative)
@@ -135,15 +151,21 @@ class PackagingTests(unittest.TestCase):
     def test_user_destinations_and_xdg_config(self):
         home = self.base / "home"
         config = self.base / "custom-config"
-        self.assertEqual(promptly.destination("codex", "user", self.base, home, {}),
-                         home / ".agents/skills/promptly")
-        self.assertEqual(promptly.destination("claude", "user", self.base, home, {}),
-                         home / ".claude/skills/promptly")
+        for harness, relative in promptly.USER_DESTINATIONS.items():
+            self.assertEqual(promptly.destination(harness, "user", self.base, home, {}),
+                             home / relative)
+        self.assertEqual(promptly.destination("muse", "user", self.base, home, {}),
+                         home / ".config/muse/skills/promptly")
         self.assertEqual(promptly.destination("opencode", "user", self.base, home,
                                              {"XDG_CONFIG_HOME": str(config)}),
                          config / "opencode/commands")
+        self.assertEqual(promptly.destination("muse", "user", self.base, home,
+                                             {"XDG_CONFIG_HOME": str(config)}),
+                         config / "muse/skills/promptly")
         with self.assertRaisesRegex(ValueError, "absolute"):
             promptly.destination("opencode", "user", self.base, home, {"XDG_CONFIG_HOME": "relative"})
+        with self.assertRaisesRegex(ValueError, "absolute"):
+            promptly.destination("muse", "user", self.base, home, {"XDG_CONFIG_HOME": "relative"})
 
     def test_cli_dry_run_and_errors(self):
         script = str(ROOT / "scripts/promptly.py")
@@ -157,6 +179,11 @@ class PackagingTests(unittest.TestCase):
         result = subprocess.run([sys.executable, script, "install", "unknown"],
                                 capture_output=True, text=True)
         self.assertNotEqual(result.returncode, 0)
+        result = subprocess.run([sys.executable, script, "install", "--help"],
+                                capture_output=True, text=True)
+        self.assertEqual(result.returncode, 0, result.stderr)
+        for harness in promptly.INSTALL_HARNESSES:
+            self.assertIn(harness, result.stdout)
 
 
 class EvaluationToolTests(unittest.TestCase):
