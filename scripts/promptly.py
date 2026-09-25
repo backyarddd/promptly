@@ -89,11 +89,17 @@ def is_link(path: Path) -> bool:
         return False
 
 
+def is_system_alias(path: Path) -> bool:
+    # macOS ships /var, /tmp, and /etc as root-level links into /private.
+    return (sys.platform == "darwin" and path.parent == Path(path.anchor)
+            and os.path.realpath(path) == f"/private{path}")
+
+
 def check_path(path: Path) -> None:
     # Do not silently follow a skill symlink or Windows junction when replacing files.
     # Check parents first: POSIX lstat(child) raises ENOTDIR if a parent is a file.
     for part in (*reversed(path.parents), path):
-        if is_link(part):
+        if is_link(part) and not is_system_alias(part):
             raise ValueError(f"Refusing linked installation path: {part}")
         if part != path and part.exists() and not part.is_dir():
             raise ValueError(f"Parent is not a directory: {part}")

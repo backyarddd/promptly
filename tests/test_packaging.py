@@ -128,6 +128,13 @@ class PackagingTests(unittest.TestCase):
             promptly.install("generic", linked)
         self.assertEqual(list(target.iterdir()), [])
 
+    @unittest.skipUnless(sys.platform == "darwin" and Path("/var").is_symlink(),
+                         "macOS system aliases only")
+    def test_macos_system_aliases_are_allowed(self):
+        with tempfile.TemporaryDirectory(dir="/var/tmp", prefix="promptly-test-") as temp:
+            dest = Path(temp) / "skill"
+            self.assertEqual(promptly.install("generic", dest), [dest / "SKILL.md"])
+
     def test_regular_file_cannot_be_replaced_by_directory(self):
         dest = self.base / "skill"
         (dest / "SKILL.md").mkdir(parents=True)
