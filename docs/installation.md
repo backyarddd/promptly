@@ -63,4 +63,4 @@ Identical content is skipped. Differing files are refused unless `--force` is us
 
 ## Removal
 
-Remove only the Promptly folder installed for the selected host, or OpenCode's `promptly.md`. Keep any backups or notes you want. No host configuration or background process needs removal.
+Remove only the Promptly folder installed for the selected host, or OpenCode's `promptly.md`. Keep any backups or notes you want. No host configuration or background process needs removal. Delete `~/.promptly/` to remove saved prompt logs.

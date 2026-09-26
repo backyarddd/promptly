@@ -1,6 +1,6 @@
 # Behavioral evaluation
 
-`cases.json` contains 24 representative scenarios with semantic acceptance and rejection criteria. They cover all twelve requested quality goals:
+`cases.json` contains 25 representative scenarios with semantic acceptance and rejection criteria. They cover all twelve requested quality goals:
 
 | Goal | Representative case IDs |
 | --- | --- |
@@ -17,7 +17,7 @@
 | Minimize questions without guessing blockers | 08, 09, 19 |
 | Produce executable instructions | 01–16, 21–23 |
 
-Additional cases test preview modes, flag boundaries, conflicting options, empty input, untrusted evidence, and unknown options.
+Additional cases test preview modes, flag boundaries, conflicting options, empty input, untrusted evidence, unknown options, and the prompt log. Case 25 needs a real-host run with file tools, not the blind preview batch; grade it from the written file and tool logs.
 
 ## Run a blind preview evaluation
 
@@ -58,7 +58,7 @@ Critical violations include dropped explicit constraints, fabricated repository 
 
 ## Test execution separately
 
-Use a disposable project with a simple verifiable task, such as changing a button label while preserving its click handler. Invoke native Promptly without preview and verify that the agent reads the relevant source, makes the requested edit, and reports actual validation. Then reset the fixture and invoke `--show` and `--no-run`; compare file hashes and tool logs to ensure no edits or task execution occurred.
+Use a disposable project with a simple verifiable task, such as changing a button label while preserving its click handler. Invoke native Promptly without preview and verify that the agent reads the relevant source, makes the requested edit, and reports actual validation. Then reset the fixture and invoke `--show` and `--no-run`; compare file hashes and tool logs to ensure no edits or task execution occurred apart from the new `~/.promptly/` log file.
 
 Also test a two-turn scenario: provide framework/architecture facts, then invoke a short feature request. Confirm the expansion carries those facts forward. Test a migration with no target to verify one focused clarification before dependent work. Use real host permissions; do not bypass them for testing.
 

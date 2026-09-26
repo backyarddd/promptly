@@ -24,6 +24,7 @@ Codex, Claude Code, and OpenCode retain native adapters. Pi, Cursor, DeepSeek Ha
 2. Promptly parses leading options and creates a concise, self-contained rewritten prompt.
 3. In default mode, it prints the complete prompt under `Promptly prompt:` and then carries it out in the same conversation.
 4. `--show` and `--no-run` print only the complete prompt and stop.
+5. The host model saves the request and prompt to a new file in `~/.promptly/` before execution, then appends its final report in default mode. This log is the only runtime state and the only file write allowed in preview mode. See the [README](../README.md#prompt-log).
 
 Promptly preserves host-selected models, permissions, planning modes, tools, and delegation policy. It never invokes itself recursively. It avoids unnecessary separate user-visible tasks but honors explicit user or host delegation requests. A text-only host can return the prompt but cannot execute it.
 

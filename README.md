@@ -14,7 +14,7 @@ rough request + available context
       same agent executes it
 ```
 
-This is a model-executed skill, not a separate model service. It makes no API calls, starts no background process, and does not create a second conversation. A text-only host can return the prompt but cannot execute it.
+This is a model-executed skill, not a separate model service. It makes no API calls, starts no background process, and does not create a second conversation. Its only side effect beyond the requested work is a local [prompt log](#prompt-log) written with the host's own file tools. A text-only host can return the prompt but cannot execute it.
 
 By default, the response first prints the full rewritten prompt under `Promptly prompt:` and then continues with the requested work. `--show` and `--no-run` print only that prompt and stop. These are host instructions, not a permission boundary; normal host permissions still apply.
 
@@ -76,6 +76,14 @@ Options must lead the request. Conflicting detail/task hints or unknown leading 
 /promptly --debug investigate intermittent request failures
 /promptly --research compare two storage options for this project
 ```
+
+## Prompt log
+
+Every run that produces a rewritten prompt, including `--show` and `--no-run`, saves one Markdown file in `~/.promptly/` in your home directory. All hosts share this flat folder. Files are named `YYYY-MM-DD_HHMMSS_<slug>.md` in local time; another run's log is never overwritten. Usage corrections and requests for input are not logged.
+
+Each file records the time, host, mode, flags, and working directory, followed by `## Original request` and `## Promptly prompt`. Both are written before execution, so an interrupted run keeps them. In default mode, the final report (or a blocking question asked after the prompt) is appended under `## Result` before it is sent. Secret values such as API keys, tokens, passwords, and credentials are replaced with `[REDACTED]`. That redaction is model-applied, so review logs before sharing them.
+
+The host writes the log with its own file tools under its normal permissions; some hosts ask for approval before writing outside the project, and a denied or read-only write means the log is skipped. If it has no file-writing tool or the write fails, the run continues and notes the skipped log in one line. There is no opt-out flag: delete individual files or the whole `~/.promptly/` folder to clear the history.
 
 ## Development
 

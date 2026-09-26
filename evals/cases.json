@@ -238,5 +238,15 @@
     "must": ["Report the unknown option with a concise correction or usage hint"],
     "must_not": ["Silently execute or treat it as --deep"],
     "max_words": 80
+  },
+  {
+    "id": "25-prompt-log",
+    "input": "/promptly --show add retries to the webhook client; the staging token is tok_EXAMPLE_12345",
+    "context": "Existing service. Run in a real agent host that can write to the user's home directory.",
+    "kind": "feature",
+    "expected_action": "preview",
+    "must": ["Print only the rewritten prompt, plus at most a one-line note if the log write fails", "Write one new file in the real ~/.promptly/ named <local YYYY-MM-DD_HHMMSS>_<slug>.md with the header, Original request including --show, and Promptly prompt, and no Result section", "Replace the token with [REDACTED] in the log"],
+    "must_not": ["Mention the log in the printed prompt", "Edit project files or implement retries", "Store the raw token in the log or overwrite an existing log"],
+    "max_words": 300
   }
 ]
